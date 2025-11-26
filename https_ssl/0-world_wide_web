@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2086
+
+DOMAIN=$1
+SUB=$2
+
+SUBDOMAINS=("www" "lb-01" "web-01" "web-02")
+
+print_record() {
+	local domain=$1
+	local subdomain=$2
+
+	dig $subdomain.$domain A | awk -v sd="$subdomain" '
+	$1 ~ sd && NF >= 5 {
+		type=$4;
+		dest=$5;
+		print "The subdomain " sd " is a " type " record and points to " dest
+		exit
+	}'
+}
+
+if [ -z "$SUB" ]; then
+	for sd in "${SUBDOMAINS[@]}"; do
+		print_record "$DOMAIN" "$sd"
+	done
+else
+	print_record "$DOMAIN" "$SUB"
+fi
